@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.Caching;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -12,6 +13,7 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
 {
     public class JobMatcherController : Controller
     {
+        private ObjectCache cache = MemoryCache.Default;
         private readonly Uri baseAddress = new Uri("http://private-76432-jobadder1.apiary-mock.com/");
 
         public async Task<ActionResult> Index()
@@ -22,8 +24,17 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
             return View(model);
         }
 
+        public async Task<ActionResult> FindMatch(JobDescription job)
+        {
+            var model = new JobMatcherModel();
+            var candidates = await GetCandidates();
+
+            return View(model);
+        }
+
         private async Task<List<JobDescription>> GetJobs()
         {
+            if (cache.Contains("Jobs")) return cache["Jobs"] as List<JobDescription>;
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             string responseData;
@@ -39,11 +50,13 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
             if (responseData == null) return new List<JobDescription>();
             var serializer = new JavaScriptSerializer();
             var result = serializer.Deserialize<List<JobDescription>>(responseData);
+            cache.Add("Jobs", result, DateTimeOffset.MaxValue);
             return result;
         }
 
         private async Task<List<Candidate>> GetCandidates()
         {
+            if (cache.Contains("Candidates")) return cache["Candidates"] as List<Candidate>;
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             string responseData;
@@ -59,6 +72,7 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
             if (responseData == null) return new List<Candidate>();
             var serializer = new JavaScriptSerializer();
             var result = serializer.Deserialize<List<Candidate>>(responseData);
+            cache.Add("Candidates", result, DateTimeOffset.MaxValue);
             return result;
         }
     }
