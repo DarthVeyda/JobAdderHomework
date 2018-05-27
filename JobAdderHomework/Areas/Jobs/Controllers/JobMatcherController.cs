@@ -29,6 +29,11 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
         public async Task<ActionResult> FindMatch(int jobId)
         {
             var model = new JobMatcherModel();
+            if (jobId <= 0)
+            {
+                ViewBag.Message = "Invalid job ID.";
+                return View(model);
+            }
             var job = (await GetJobs())[jobId];
             model.JobId = jobId;
             model.JobName = job.Name;
@@ -47,6 +52,7 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
             var selectedCandidate = new Candidate();
 
             selectedCandidate = first.Value;
+            ViewBag.Message = "Match found.";
 
             model.Candidate = new JobMatcherModel.ClosestMatchingCandidate() { Id = selectedCandidate.CandidateId, Name = selectedCandidate.Name, Skills = selectedCandidate.SkillTags };
             return View(model);
@@ -120,7 +126,6 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
         public static Dictionary<string, double> IntersectByName(this Dictionary<string, double> dict, Dictionary<string, double> dictToIntersect)
         {
             var keys = dict.Keys.Intersect(dictToIntersect.Keys);
-            keys.Select(key => new { Key = key, Value = dict[key] * dictToIntersect[key] }).ToDictionary(x => x.Key, x => x.Value);
             return keys.Select(key => new { Key = key, Value = dict[key] * dictToIntersect[key] }).ToDictionary(x => x.Key, x => x.Value);
         }
     }

@@ -9,5 +9,5 @@
 <p>@Model.JobName</p>
 <p>@Model.CompanyName</p>
 <p>@Model.Skills</p>
-<p>@Model.Candidate.Name</p>
-<p>@Model.Candidate.Skills</p>
+<p>@(Model.Candidate?.Name)</p>
+<p>@(Model.Candidate?.Skills)</p>
