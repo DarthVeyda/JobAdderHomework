@@ -21,9 +21,9 @@
                 @foreach (var job in Model.Jobs)
                 {
                     <tr>
-                        <td>@job.Name</td>
-                        <td>@job.Company</td>
-                        <td>@job.Skills</td>
+                        <td>@Html.ActionLink(@job.Value.Name, "FindMatch", "JobMatcher", new { Area = "Jobs", jobId = job.Key }, new { }) </td>
+                        <td>@job.Value.Company</td>
+                        <td>@job.Value.Skills</td>
                     </tr>
                 }
             </tbody>
@@ -46,8 +46,8 @@
                 @foreach (var candidate in Model.Candidates)
                 {
                     <tr>
-                        <td>@candidate.Name</td>
-                        <td>@candidate.SkillTags</td>
+                        <td>@candidate.Value.Name</td>
+                        <td>@candidate.Value.SkillTags</td>
                     </tr>
                 }
             </tbody>

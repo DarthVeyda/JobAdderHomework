@@ -7,8 +7,8 @@ namespace JobAdderHomework.Areas.Jobs.Models
 {
     public class JobOverviewModel
     {
-        public List<JobDescription> Jobs { get; set; }
-        public List<Candidate> Candidates { get; set; }
+        public Dictionary<int, JobDescription> Jobs { get; set; }
+        public Dictionary<int, Candidate> Candidates { get; set; }
     }
 
     public class Candidate
@@ -16,7 +16,7 @@ namespace JobAdderHomework.Areas.Jobs.Models
         public int CandidateId { get; set; }
         public string Name { get; set; }
         public string SkillTags { get; set; }
-        public HashSet<(double weight, string name)> WeightedSkills { get; set; }
+        public Dictionary<string, double> WeightedSkills { get; set; }
     }
 
     public class JobDescription
@@ -25,6 +25,6 @@ namespace JobAdderHomework.Areas.Jobs.Models
         public string Name { get; set; }
         public string Company { get; set; }
         public string Skills { get; set; }
-        public HashSet<(double weight, string name)> WeightedSkills { get; set; }
+        public Dictionary<string, double> WeightedSkills { get; set; }
     }
 }

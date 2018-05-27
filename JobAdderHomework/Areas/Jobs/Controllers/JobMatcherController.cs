@@ -15,6 +15,8 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
     {
         private ObjectCache cache = MemoryCache.Default;
         private readonly Uri baseAddress = new Uri("http://private-76432-jobadder1.apiary-mock.com/");
+        private readonly double minimalThreshold = 0.66;
+        private readonly double betterThreshold = 0.34;
 
         public async Task<ActionResult> Index()
         {
@@ -24,17 +26,50 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
             return View(model);
         }
 
-        public async Task<ActionResult> FindMatch(JobDescription job)
+        public async Task<ActionResult> FindMatch(int jobId)
         {
             var model = new JobMatcherModel();
-            var candidates = await GetCandidates();
+            var job = (await GetJobs())[jobId];
+            model.JobId = jobId;
+            model.JobName = job.Name;
+            model.CompanyName = job.Company;
+            model.Skills = job.Skills;
 
+            var candidates = await GetCandidates();
+            job.WeightedSkills = InitWeightedSkills(job.Skills, true);         
+
+            foreach (var candidate in candidates)
+            {
+                candidate.Value.WeightedSkills = InitWeightedSkills(candidate.Value.SkillTags);
+            }
+
+            var first = candidates.OrderByDescending(c => job.WeightedSkills.IntersectByName(c.Value.WeightedSkills).Sum(s => s.Value)).First();
+            var selectedCandidate = new Candidate();
+
+            selectedCandidate = first.Value;
+
+            model.Candidate = new JobMatcherModel.ClosestMatchingCandidate() { Id = selectedCandidate.CandidateId, Name = selectedCandidate.Name, Skills = selectedCandidate.SkillTags };
             return View(model);
         }
 
-        private async Task<List<JobDescription>> GetJobs()
+
+        private Dictionary<string, double> InitWeightedSkills(string rawSkills, bool forJD=false)
         {
-            if (cache.Contains("Jobs")) return cache["Jobs"] as List<JobDescription>;
+            var result = new Dictionary<string, double>();
+            var skills = rawSkills.Split(',').Select(s => s.Trim()).Distinct().ToArray();
+            var count = skills.Count();
+            for (int i = 0; i < count; i++)
+            {
+                var rawWeight = (double)(count - i) / count;
+                var weightToAdd = rawWeight >= minimalThreshold ? 1 : (rawWeight >= betterThreshold ? minimalThreshold : betterThreshold);
+                result.Add(skills[i], (forJD ? (count - i) * rawWeight : rawWeight));
+            }
+            return result;
+        }
+
+        private async Task<Dictionary<int, JobDescription>> GetJobs()
+        {
+            if (cache.Contains("Jobs")) return cache["Jobs"] as Dictionary<int, JobDescription>;
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             string responseData;
@@ -47,16 +82,19 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
                     responseData = await response.Content.ReadAsStringAsync();
                 }
             }
-            if (responseData == null) return new List<JobDescription>();
+            if (responseData == null) return new Dictionary<int, JobDescription>();
             var serializer = new JavaScriptSerializer();
             var result = serializer.Deserialize<List<JobDescription>>(responseData);
-            cache.Add("Jobs", result, DateTimeOffset.MaxValue);
-            return result;
+            result.ForEach(entry => entry.Skills = entry.Skills.Replace("ahpra", "aphra"));  
+            var resultDict = result.ToDictionary(x => x.JobId, x => x);
+            
+            cache.Add("Jobs", resultDict, DateTimeOffset.MaxValue);
+            return resultDict;
         }
 
-        private async Task<List<Candidate>> GetCandidates()
+        private async Task<Dictionary<int, Candidate>> GetCandidates()
         {
-            if (cache.Contains("Candidates")) return cache["Candidates"] as List<Candidate>;
+            if (cache.Contains("Candidates")) return cache["Candidates"] as Dictionary<int, Candidate>;
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             string responseData;
@@ -69,11 +107,21 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
                     responseData = await response.Content.ReadAsStringAsync();
                 }
             }
-            if (responseData == null) return new List<Candidate>();
+            if (responseData == null) return new Dictionary<int, Candidate>();
             var serializer = new JavaScriptSerializer();
-            var result = serializer.Deserialize<List<Candidate>>(responseData);
+            var result = serializer.Deserialize<List<Candidate>>(responseData).ToDictionary(x => x.CandidateId, x => x);
             cache.Add("Candidates", result, DateTimeOffset.MaxValue);
             return result;
+        }
+    }
+
+    public static class Extensions
+    {
+        public static Dictionary<string, double> IntersectByName(this Dictionary<string, double> dict, Dictionary<string, double> dictToIntersect)
+        {
+            var keys = dict.Keys.Intersect(dictToIntersect.Keys);
+            keys.Select(key => new { Key = key, Value = dict[key] * dictToIntersect[key] }).ToDictionary(x => x.Key, x => x.Value);
+            return keys.Select(key => new { Key = key, Value = dict[key] * dictToIntersect[key] }).ToDictionary(x => x.Key, x => x.Value);
         }
     }
 }
