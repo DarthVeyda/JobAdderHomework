@@ -1,7 +1,57 @@
-﻿
-@{
-    ViewBag.Title = "Jobs";
-}
+﻿@using JobAdderHomework.Areas.Jobs.Models
+@model JobOverviewModel
 
-<h2>Index</h2>
+@{
+    ViewBag.Title = "Jobs List";
+}
+<h1>Current data</h1>
+<p class="lead">Click the job description to find the best available candidate.</p>
+<div class="row">
+    <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#jobs"><h3>Jobs (click to expand)</h3></button>
+    <div id="jobs" class="collapse">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Skills (from most to least relevant)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var job in Model.Jobs)
+                {
+                    <tr>
+                        <td>@job.Name</td>
+                        <td>@job.Company</td>
+                        <td>@job.Skills</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="row">&nbsp;</div>
+<div class="row">
+    <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#candidates"><h3>Candidates (click to expand)</h3></button>
+
+    <div id="candidates" class="collapse">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Skills (from most to least proficient)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var candidate in Model.Candidates)
+                {
+                    <tr>
+                        <td>@candidate.Name</td>
+                        <td>@candidate.SkillTags</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
