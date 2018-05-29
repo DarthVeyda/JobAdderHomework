@@ -13,21 +13,14 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
         private readonly double minimalThreshold = 0.66;
         private readonly double betterThreshold = 0.34;
 
-        private const string BASE_ADDRESS = "http://private-76432-jobadder1.apiary-mock.com/";
         private readonly IJobsService _JobsService;
         private readonly ICandidatesService _CandidatesService;
 
 
-        //public JobMatcherController(IJobsService jobsService, ICandidatesService candidatesService)
-        //{
-        //    _JobsService = jobsService ?? throw new ArgumentNullException(nameof(jobsService));
-        //    _CandidatesService = candidatesService ?? throw new ArgumentNullException(nameof(candidatesService));
-        //}
-
-        public JobMatcherController()
+        public JobMatcherController(IJobsService jobsService, ICandidatesService candidatesService)
         {
-            _JobsService = new JobsService(BASE_ADDRESS);
-            _CandidatesService = new CandidateService(BASE_ADDRESS);
+            _JobsService = jobsService ?? throw new ArgumentNullException(nameof(jobsService));
+            _CandidatesService = candidatesService ?? throw new ArgumentNullException(nameof(candidatesService));
         }
 
         public async Task<ActionResult> Index()
@@ -38,8 +31,7 @@ namespace JobAdderHomework.Areas.Jobs.Controllers
             return View(model);
         }
 
-
-        public async Task<ActionResult> FindMatch(int jobId)
+        public async Task<ActionResult> FindMatch(int jobId = 0)
         {
             var model = new JobMatcherModel();
             if (jobId <= 0)

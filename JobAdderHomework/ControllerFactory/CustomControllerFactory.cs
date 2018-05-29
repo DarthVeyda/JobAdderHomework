@@ -2,16 +2,26 @@
 using System.Web.Mvc;
 using System.Web.Routing;
 
+using Autofac;
+using Autofac.Integration.Mvc;
+
 namespace JobAdderHomework.ControllerFactory
 {
     public class CustomControllerFactory : DefaultControllerFactory
     {
+        private readonly IContainer _Container;
+
+        public CustomControllerFactory(IContainer container)
+        {
+            _Container = container ?? throw new ArgumentNullException("container");
+        }
+
         public override IController CreateController(RequestContext requestContext, string controllerName)
         {
-            string controllername = requestContext.RouteData.Values["controller"].ToString();
-            Type controllerType = Type.GetType(string.Format("CustomControllerFactory.Controllers.{0}", controllername));
-            IController controller = Activator.CreateInstance(controllerType) as IController;
-            return controller;
+            Type controllerType = GetControllerType(requestContext, controllerName);
+            
+            var controller = ((AutofacDependencyResolver)DependencyResolver.Current).RequestLifetimeScope.Resolve(controllerType);
+            return controller as IController;
         }
 
         public override void ReleaseController(IController controller)

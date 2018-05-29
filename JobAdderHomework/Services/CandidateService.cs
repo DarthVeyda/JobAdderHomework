@@ -9,14 +9,14 @@ using JobAdderHomework.Areas.Jobs.Models;
 
 namespace JobAdderHomework.Services
 {
-    public class CandidateService : ICandidatesService
+    public class CandidatesService : ICandidatesService
     {
-        private readonly string _BaseAddress;
         private readonly ObjectCache cache;
+        private HttpClient _HttpClient;
 
-        public CandidateService(string baseAddress)
+        public CandidatesService(HttpClient httpClient)
         {
-            _BaseAddress = baseAddress;
+            _HttpClient = httpClient;
             cache = MemoryCache.Default;
         }
 
@@ -26,14 +26,9 @@ namespace JobAdderHomework.Services
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             string responseData;
-            using (var httpClient = new HttpClient { BaseAddress = new Uri(_BaseAddress) })
+            using (var response = await _HttpClient.GetAsync("candidates"))
             {
-
-                using (var response = await httpClient.GetAsync("candidates"))
-                {
-
-                    responseData = await response.Content.ReadAsStringAsync();
-                }
+                responseData = await response.Content.ReadAsStringAsync();
             }
             if (responseData == null) return new Dictionary<int, Candidate>();
             var serializer = new JavaScriptSerializer();

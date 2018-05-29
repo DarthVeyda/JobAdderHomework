@@ -11,12 +11,12 @@ namespace JobAdderHomework.Services
 {
     public class JobsService : IJobsService
     {
-        private readonly string _BaseAddress;
+        private HttpClient _HttpClient;
         private readonly ObjectCache cache;
 
-        public JobsService(string baseAddess)
+        public JobsService(HttpClient httpClient)
         {
-            _BaseAddress = baseAddess;
+            _HttpClient = httpClient;
             cache = MemoryCache.Default;
         }
 
@@ -26,14 +26,10 @@ namespace JobAdderHomework.Services
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             string responseData;
-            using (var httpClient = new HttpClient { BaseAddress = new Uri(_BaseAddress) })
+            using (var response = await _HttpClient.GetAsync("jobs"))
             {
 
-                using (var response = await httpClient.GetAsync("jobs"))
-                {
-
-                    responseData = await response.Content.ReadAsStringAsync();
-                }
+                responseData = await response.Content.ReadAsStringAsync();
             }
             if (responseData == null) return new Dictionary<int, JobDescription>();
             var serializer = new JavaScriptSerializer();
