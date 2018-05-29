@@ -19,3 +19,10 @@ The project is an ASP.Net MVC website. The Jobs page has lists of all available 
 4. The "aphra"/"ahpra" mismatch in the testing data is a typo.
 5. The test data from the sandbox doesn't change between requests (so it makes sense to cache it after retrieving it for the first time).
 
+## The matching algorithm
+
+1. For each candidate, get the skills that are in the job requirements (if any).
+2. For every matching skill, multiply the job weight and the candidate weight (i.e. to balance "Critical requirement for the job" with "Candidate mentions it near the end of the list").
+3. Add up all the products.
+4. Candidate with the maximum sum of the products is the closest match.
+
